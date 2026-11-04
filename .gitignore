@@ -218,3 +218,18 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# uv
+.venv/
+.python-version
+
+# Datasets
+/data/
+
+# IDE
+.vscode/
+.idea/

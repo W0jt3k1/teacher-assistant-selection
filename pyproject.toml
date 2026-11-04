@@ -1,0 +1,16 @@
+[project]
+name = "teacher-assistant-selection"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "torch>=2.15.0",
+    "torchvision>=0.29.2",
+    "tqdm>=4.70.1",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.2.0",
+]
