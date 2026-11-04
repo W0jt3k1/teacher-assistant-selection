@@ -4,6 +4,12 @@ An academic research project investigating whether neural network representation
 
 **Status:** Planning
 
+### Slow Download Fix
+
+If downloading CIFAR-100 through `torchvision` is extremely slow, download it manually from the [Zenodo mirror](https://zenodo.org/records/10089977/files/cifar-100-python.tar.gz?download=1).
+
+Extract the archive into the `data/` directory. `torchvision` will automatically detect the existing dataset and skip downloading it again.
+
 ## Overview
 
 Knowledge Distillation (KD) transfers knowledge from a larger Teacher model to a smaller Student model. Teacher Assistant Knowledge Distillation (TAKD) introduces an intermediate model to bridge the gap between Teacher and Student.
