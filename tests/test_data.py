@@ -1,10 +1,11 @@
 from torchvision.datasets import CIFAR100
+from src.get_data import get_data
 
 train_data = CIFAR100(root="./data", train=True, download=False)
 test_data = CIFAR100(root="./data", train=False, download=False)
 
 
-def test_train_set_size():
+def test_full_train_set_size():
     assert (
         len(train_data) == 50_000
     ), f"Expected 50,000 training samples, got {len(train_data)}"
@@ -25,3 +26,19 @@ def test_label_range():
     _, label = train_data[0]
     assert isinstance(label, int), f"label should be whole number got {label}"
     assert 0 <= label <= 99, f"label should be in [0,99] got {label}"
+
+
+def test_split_sizes():
+    train, val, test = get_data()
+    assert (
+        len(train) == 45_000
+    ), f"Expected train set to be 45 000 samples got {len(train)}"
+    assert len(val) == 5_000, f"Expected val set to be 45 000 samples got {len(val)}"
+    assert (
+        len(test) == 10_000
+    ), f"Expected test set to be 45 000 samples got {len(test)}"
+
+
+def test_split_disjoint():
+    train, val, _ = get_data()
+    assert set(train.indices).isdisjoint(set(val.indicies))
