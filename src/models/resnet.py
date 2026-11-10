@@ -4,6 +4,7 @@ import torch.nn as nn
 class BasicBlock(nn.Module):
     def __init__(self, in_channels, out_channels, stride=1):
         super().__init__()
+        self.relu = nn.ReLU()
         self.conv1 = nn.Conv2d(
             in_channels=in_channels,
             out_channels=out_channels,
@@ -36,3 +37,62 @@ class BasicBlock(nn.Module):
             )
         else:
             self.shortcut = nn.Identity()
+
+    def forward(self, X):
+        x = self.conv1(X)
+        x = self.bn1(x)
+        x = self.relu(x)
+        x = self.conv2(x)
+        x = self.bn2(x)
+        x = x + self.shortcut(X)
+        x = self.relu(x)
+        return x
+
+
+class ResNet(nn.Module):
+    def __init__(self, n, num_classes=100):
+        super().__init__()
+        self.conv1 = nn.Conv2d(
+            in_channels=3,
+            out_channels=16,
+            kernel_size=3,
+            stride=1,
+            padding=1,
+            bias=False,
+        )
+        self.bn1 = nn.BatchNorm2d(16)
+        self.relu = nn.ReLU()
+        self.in_channels = 16
+        self.layer1 = self._make_layer(16, n, 1)
+        self.layer2 = self._make_layer(32, n, 2)
+        self.layer3 = self._make_layer(64, n, 2)
+        self.avgpool = nn.AdaptiveAvgPool2d(1)
+        self.fc = nn.Linear(64, num_classes)
+
+    def _make_layer(self, out_channels, blocks, stride):
+        layers = []
+        layers.append(
+            BasicBlock(
+                in_channels=self.in_channels, out_channels=out_channels, stride=stride
+            )
+        )
+        self.in_channels = out_channels
+        for _ in range(blocks - 1):
+            layers.append(
+                BasicBlock(
+                    in_channels=self.in_channels, out_channels=out_channels, stride=1
+                )
+            )
+        return nn.Sequential(*layers)
+
+    def forward(self, X):
+        x = self.conv1(X)
+        x = self.bn1(x)
+        x = self.relu(x)
+        x = self.layer1(x)
+        x = self.layer2(x)
+        x = self.layer3(x)
+        x = self.avgpool(x)
+        x = x.flatten(start_dim=1)
+        x = self.fc(x)
+        return x
