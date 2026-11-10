@@ -6,7 +6,7 @@ from torchvision.transforms import (
     ToTensor,
     Normalize,
 )
-from torch.utils.data import random_split, Subset
+from torch.utils.data import random_split, Subset, DataLoader
 import torch
 
 mean = (0.5071, 0.4867, 0.4408)
@@ -27,7 +27,10 @@ def get_data():
         full_train_set, [45_000, 5_000], generator=torch.Generator().manual_seed(42)
     )
     val_set = Subset(full_val_set, val_set.indices)
-    return train_set, val_set, test_set
+    train_loader = DataLoader(train_set, batch_size=128, shuffle=True)
+    val_loader = DataLoader(val_set, batch_size=256, shuffle=False)
+    test_loader = DataLoader(test_set, batch_size=256, shuffle=False)
+    return train_loader, val_loader, test_loader
 
 
 def train_transform():

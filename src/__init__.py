@@ -1,1 +1,1 @@
-from src.get_data import get_data
+from prepare_data import get_data
