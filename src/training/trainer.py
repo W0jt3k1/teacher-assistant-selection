@@ -1,4 +1,5 @@
 import torch
+from tqdm.auto import tqdm
 
 
 def train_one_epoch(model, train_loader, optimizer, criterion, device):
@@ -6,7 +7,12 @@ def train_one_epoch(model, train_loader, optimizer, criterion, device):
     total_loss = 0.0
     correct = 0
     total = 0
-    for images, labels in train_loader:
+    for images, labels in tqdm(
+        train_loader,
+        desc="Training",
+        leave=False,
+        dynamic_ncols=True,
+    ):
 
         images = images.to(device)
         labels = labels.to(device)
