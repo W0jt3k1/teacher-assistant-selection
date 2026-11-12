@@ -229,7 +229,7 @@ __pycache__/
 
 # Datasets
 /data/
-
+/checkpoints/
 # IDE
 .vscode/
 .idea/
