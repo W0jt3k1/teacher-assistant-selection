@@ -23,6 +23,7 @@ class TrainingConfig:
     patience: int = 30
     min_delta: float = 0.001
     early_stopping_enabled: bool = False
+    resume_from_checkpoint: bool = False
 
     def get_run_name(self) -> str:
         """
