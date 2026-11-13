@@ -7,6 +7,7 @@ import torch.nn as nn
 import torch.optim as optim
 from torch.optim.lr_scheduler import MultiStepLR
 
+from src.training.config import TrainingConfig
 from src.models.resnet import ResNet
 from src.prepare_data import get_data
 from src.training.trainer import train_one_epoch, evaluate
@@ -19,24 +20,6 @@ def set_seed(seed=42):
 
 
 def main():
-    # Configuration
-    set_seed(42)
-
-    epochs = 5
-    patience = 30
-    min_delta = 0.001
-    early_stopping_enabled = False
-
-    best_val_acc = 0.0
-    early_stopping_best = 0.0
-    epochs_without_improvement = 0
-
-    model_name = "ResNet-8"
-    checkpoints_path = Path("checkpoints")
-    checkpoints_path.mkdir(parents=True, exist_ok=True)
-    checkpoints_path = Path("checkpoints") / model_name
-    checkpoints_path.mkdir(parents=True, exist_ok=True)
-
     # Device
     if torch.cuda.is_available():
         device = torch.device("cuda")
@@ -44,26 +27,40 @@ def main():
         device = torch.device("xpu")
     else:
         device = torch.device("cpu")
+    config = TrainingConfig(epochs=5)
+    # Configuration
+    set_seed(42)
 
+    epochs = config.epochs
+    patience = config.patience
+    min_delta = config.min_delta
+    early_stopping_enabled = config.early_stopping_enabled
+
+    best_val_acc = 0.0
+    early_stopping_best = 0.0
+    epochs_without_improvement = 0
+
+    model_name = config.get_run_name()
+    model = ResNet(n=config.model_n).to(device)
+    checkpoints_path = Path("checkpoints") / model_name
+    checkpoints_path.mkdir(parents=True, exist_ok=True)
     # Data and model
     train_loader, val_loader, _ = get_data()
-
-    model = ResNet(n=1).to(device)
 
     criterion = nn.CrossEntropyLoss()
 
     optimizer = optim.SGD(
         model.parameters(),
-        lr=0.1,
-        momentum=0.9,
-        weight_decay=1e-4,
+        lr=config.learning_rate,
+        momentum=config.momentum,
+        weight_decay=config.weight_decay,
         foreach=False,
     )
 
     scheduler = MultiStepLR(
         optimizer,
-        milestones=[75, 112],
-        gamma=0.1,
+        milestones=list(config.milestones),
+        gamma=config.gamma,
     )
 
     print(f"Training on: {device}\n")
