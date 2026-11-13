@@ -22,7 +22,7 @@ def main():
     # Configuration
     set_seed(42)
 
-    epochs = 11
+    epochs = 5
     patience = 30
     min_delta = 0.001
     early_stopping_enabled = False
@@ -31,7 +31,7 @@ def main():
     early_stopping_best = 0.0
     epochs_without_improvement = 0
 
-    model_name = "ResNet-32"
+    model_name = "ResNet-8"
     checkpoints_path = Path("checkpoints")
     checkpoints_path.mkdir(parents=True, exist_ok=True)
     checkpoints_path = Path("checkpoints") / model_name
@@ -48,7 +48,7 @@ def main():
     # Data and model
     train_loader, val_loader, _ = get_data()
 
-    model = ResNet(n=5).to(device)
+    model = ResNet(n=1).to(device)
 
     criterion = nn.CrossEntropyLoss()
 
@@ -62,7 +62,7 @@ def main():
 
     scheduler = MultiStepLR(
         optimizer,
-        milestones=[5, 10],
+        milestones=[75, 112],
         gamma=0.1,
     )
 
