@@ -1,4 +1,12 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+
+
+@dataclass
+class DistillationConfig:
+    alpha: float = 0.5
+    temperature: float = 4.0
+    teacher_checkpoint: str | None = None
+    teacher_model_n: int = 18
 
 
 @dataclass
@@ -8,10 +16,10 @@ class TrainingConfig:
     """
 
     method: str = "supervised"
-    architecture: str = "ResNet"
+    architecture: str = "resnet"
     model_n: int = 1
     run_name: str | None = None
-    milestones: list = (75, 112)
+    milestones: tuple[int, ...] = (75, 112)
     gamma: float = 0.1
     checkpoint_interval: int = 10
     epochs: int = 150
@@ -24,6 +32,7 @@ class TrainingConfig:
     min_delta: float = 0.001
     early_stopping_enabled: bool = False
     resume_from_checkpoint: bool = False
+    distillation: DistillationConfig = field(default_factory=DistillationConfig)
 
     def get_run_name(self) -> str:
         """

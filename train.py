@@ -4,11 +4,12 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 
+from src.training.distillation import distill_one_epoch
 from pathlib import Path
 from torch.optim.lr_scheduler import MultiStepLR
 from dataclasses import asdict
 from src.training.checkpoint import save_checkpoint, load_checkpoint
-from src.training.config import TrainingConfig
+from src.training.config import TrainingConfig, DistillationConfig
 from src.models.resnet import ResNet
 from src.prepare_data import get_data
 from src.training.trainer import train_one_epoch, evaluate
@@ -30,10 +31,18 @@ def main():
         device = torch.device("cpu")
     print(f"Training on: {device}\n")
     config = TrainingConfig(
+        method="distillation",
+        model_n=1,
         epochs=4,
         checkpoint_interval=1,
-        run_name="resume-test",
+        run_name="test-distillation",
         resume_from_checkpoint=True,
+        distillation=DistillationConfig(
+            teacher_model_n=18,
+            teacher_checkpoint="checkpoints/test-teacher/best.pt",
+            alpha=0.5,
+            temperature=4.0,
+        ),
     )
     # Configuration
     set_seed(config.seed)
@@ -41,11 +50,25 @@ def main():
     epochs = config.epochs
     min_delta = config.min_delta
 
+    teacher = None
     best_val_acc = 0.0
     early_stopping_best = 0.0
     epochs_without_improvement = 0
 
     model_name = config.get_run_name()
+    if config.method == "distillation":
+        if config.distillation.teacher_checkpoint is None:
+            raise ValueError(
+                "Teacher checkpoint must be provided for knowledge distillation."
+            )
+        teacher_checkpoint_path = Path(config.distillation.teacher_checkpoint)
+        teacher = ResNet(n=config.distillation.teacher_model_n).to(device)
+        teacher.load_state_dict(
+            load_checkpoint(teacher_checkpoint_path, device)["model_state_dict"]
+        )
+        teacher.eval()
+        teacher.requires_grad_(False)
+        print(f"Loaded teacher model from {teacher_checkpoint_path}")
     model = ResNet(n=config.model_n).to(device)
     checkpoints_path = Path("checkpoints") / model_name
     checkpoints_path.mkdir(parents=True, exist_ok=True)
@@ -106,10 +129,22 @@ def main():
     # Training
     for epoch in range(start_epoch, epochs + 1):
         current_lr = optimizer.param_groups[0]["lr"]
-
-        train_loss, train_acc = train_one_epoch(
-            model, train_loader, optimizer, criterion, device
-        )
+        if config.method == "distillation":
+            train_loss, train_acc = distill_one_epoch(
+                teacher,
+                model,
+                train_loader,
+                optimizer,
+                device,
+                alpha=config.distillation.alpha,
+                temperature=config.distillation.temperature,
+            )
+        elif config.method == "supervised":
+            train_loss, train_acc = train_one_epoch(
+                model, train_loader, optimizer, criterion, device
+            )
+        else:
+            raise ValueError(f"Unknown training method: {config.method}")
 
         val_loss, val_acc = evaluate(model, val_loader, criterion, device)
 
