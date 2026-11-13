@@ -14,6 +14,7 @@ from src.training.config import TrainingConfig, DistillationConfig
 from src.models.resnet import ResNet
 from src.prepare_data import get_data
 from src.training.trainer import train_one_epoch, evaluate
+from experiments import experiments
 
 
 def set_seed(seed=42):
@@ -22,7 +23,7 @@ def set_seed(seed=42):
     torch.manual_seed(seed)
 
 
-def main():
+def train_experiment(config: TrainingConfig):
     # Device
     if torch.cuda.is_available():
         device = torch.device("cuda")
@@ -31,32 +32,19 @@ def main():
     else:
         device = torch.device("cpu")
     print(f"Training on: {device}\n")
-    config = TrainingConfig(
-        method="distillation",
-        model_n=1,
-        epochs=4,
-        checkpoint_interval=1,
-        run_name="test-distillation",
-        resume_from_checkpoint=True,
-        distillation=DistillationConfig(
-            teacher_model_n=18,
-            teacher_checkpoint="checkpoints/test-teacher/best.pt",
-            alpha=0.5,
-            temperature=4.0,
-        ),
-    )
     # Configuration
     set_seed(config.seed)
 
     epochs = config.epochs
     min_delta = config.min_delta
 
-    teacher = None
     best_val_acc = 0.0
     early_stopping_best = 0.0
     epochs_without_improvement = 0
 
     model_name = config.get_run_name()
+    model = ResNet(n=config.model_n).to(device)
+    teacher = None
     if config.method == "distillation":
         if config.distillation.teacher_checkpoint is None:
             raise ValueError(
@@ -70,7 +58,6 @@ def main():
         teacher.eval()
         teacher.requires_grad_(False)
         print(f"Loaded teacher model from {teacher_checkpoint_path}")
-    model = ResNet(n=config.model_n).to(device)
     checkpoints_path = Path("checkpoints") / model_name
     checkpoints_path.mkdir(parents=True, exist_ok=True)
 
@@ -218,6 +205,16 @@ def main():
             break
 
     print(f"\nBest validation accuracy: {best_val_acc:.2%}")
+
+
+def main():
+    for i, config in enumerate(experiments, start=1):
+        print(
+            f"\n=== Experiment {i}/{len(experiments)}: " f"{config.get_run_name()} ===",
+            flush=True,
+        )
+
+        train_experiment(config)
 
 
 if __name__ == "__main__":
