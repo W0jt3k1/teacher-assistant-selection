@@ -4,6 +4,7 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 
+from src.training.metrics import log_metrics
 from src.training.distillation import distill_one_epoch
 from pathlib import Path
 from torch.optim.lr_scheduler import MultiStepLR
@@ -199,6 +200,15 @@ def main():
             f"LR: {current_lr:.5f} | "
             f"Train loss: {train_loss:.4f}, acc: {train_acc:.2%} | "
             f"Val loss: {val_loss:.4f}, acc: {val_acc:.2%}"
+        )
+        log_metrics(
+            path=checkpoints_path / "metrics.csv",
+            epoch=epoch,
+            learning_rate=current_lr,
+            train_loss=train_loss,
+            train_accuracy=train_acc,
+            val_loss=val_loss,
+            val_accuracy=val_acc,
         )
         if (
             config.early_stopping_enabled
