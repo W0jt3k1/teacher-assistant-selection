@@ -4,11 +4,20 @@ version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.12,<3.15"
+
 dependencies = [
-    "torch>=2.15.0",
-    "torchvision>=0.29.2",
     "tqdm>=4.70.1",
-    "triton-xpu>=3.9.0",
+]
+
+[project.optional-dependencies]
+xpu = [
+    "torch==2.15.0",
+    "torchvision==0.29.2",
+    "triton-xpu>=3.9.0,<3.10",
+]
+cuda = [
+    "torch==2.15.0",
+    "torchvision==0.29.2",
 ]
 
 [dependency-groups]
@@ -16,12 +25,31 @@ dev = [
     "pytest>=9.2.0",
 ]
 
+[tool.uv]
+conflicts = [
+    [
+        { extra = "xpu" },
+        { extra = "cuda" },
+    ],
+]
+
 [tool.uv.sources]
-torch = { index = "pytorch-xpu" }
-torchvision = { index = "pytorch-xpu" }
+torch = [
+    { index = "pytorch-xpu", extra = "xpu" },
+    { index = "pytorch-cuda", extra = "cuda" },
+]
+torchvision = [
+    { index = "pytorch-xpu", extra = "xpu" },
+    { index = "pytorch-cuda", extra = "cuda" },
+]
 triton-xpu = { index = "pytorch-xpu" }
 
 [[tool.uv.index]]
 name = "pytorch-xpu"
 url = "https://download.pytorch.org/whl/xpu"
+explicit = true
+
+[[tool.uv.index]]
+name = "pytorch-cuda"
+url = "https://download.pytorch.org/whl/cu132"
 explicit = true
