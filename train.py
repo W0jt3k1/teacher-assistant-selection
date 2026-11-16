@@ -69,6 +69,7 @@ def train_experiment(config: TrainingConfig):
         momentum=config.momentum,
         weight_decay=config.weight_decay,
         foreach=False,
+        nesterov=config.nesterov,
     )
 
     scheduler = MultiStepLR(

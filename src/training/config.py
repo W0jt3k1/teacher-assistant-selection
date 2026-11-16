@@ -32,6 +32,7 @@ class TrainingConfig:
     min_delta: float = 0.001
     early_stopping_enabled: bool = False
     resume_from_checkpoint: bool = False
+    nesterov: bool = True
     distillation: DistillationConfig = field(default_factory=DistillationConfig)
 
     def get_run_name(self) -> str:
